@@ -22,11 +22,14 @@ namespace Sitecore.Support.Form.Core
             Publisher publisher = args2.Parameters.FirstOrDefault<object>() as Publisher;
             if (publisher.Options.PublishRelatedItems && (publisher.Options.Mode == PublishMode.SingleItem))
             {
-                string input = publisher.Options.RootItem.Fields["__Final renderings"].Value;
-                if (input.Contains(str) || input.Contains(str2))
+                #region modified part of code. Added null check of finalRenderings variable and changed field to get layout details
+                var finalRenderings = LayoutField.GetFieldValue(publisher.Options.RootItem.Fields[FieldIDs.FinalLayoutField]);
+
+                if (finalRenderings != null && (finalRenderings.Contains(str) || finalRenderings.Contains(str2)))
                 {
+                    #endregion
                     Database sourceDatabase = publisher.Options.SourceDatabase;
-                    foreach (object obj2 in Regex.Matches(input, @"(\{){0,1}[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}(\}){0,1}"))
+                    foreach (object obj2 in Regex.Matches(finalRenderings, @"(\{){0,1}[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}(\}){0,1}"))
                     {
                         Item item = sourceDatabase.GetItem(obj2.ToString());
                         if ((item != null) && (item.TemplateID == IDs.FormTemplateID))
@@ -38,6 +41,7 @@ namespace Sitecore.Support.Form.Core
                 }
             }
         }
+
         private void PublishItem(Item item, Database sourceDB, Database targetDB, PublishMode mode)
         {
             PublishOptions options = new PublishOptions(sourceDB, targetDB, mode, item.Language, DateTime.Now)
